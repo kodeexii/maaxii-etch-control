@@ -139,19 +139,26 @@ class MaaXII_Etch_Callbacks {
     private function process_blueprint_recursive( $layout ) {
         $blocks = [];
         foreach ( (array)$layout as $item ) {
+            // CASE 1: TEXT
             if ( isset( $item['text'] ) ) {
                 $blocks[] = [
                     'blockName'    => 'etch/text',
-                    'attrs'        => [ 'content' => (string)$item['text'] ],
+                    'attrs'        => [ 
+                        'metadata' => [ 'name' => 'Text' ],
+                        'content'  => (string)$item['text'] 
+                    ],
                     'innerBlocks'  => [],
                     'innerHTML'    => '',
                     'innerContent' => []
                 ];
-            } else {
+            } 
+            // CASE 2: ELEMENT
+            else {
                 $tag    = $item['tag'] ?? 'div';
                 $styles = (array)($item['styles'] ?? []);
                 $attrs  = (array)($item['attrs'] ?? $item['attributes'] ?? []);
                 
+                // Detection for Etch elements
                 if ( in_array( 'etch-section-style', $styles, true ) ) {
                     $attrs['data-etch-element'] = 'section';
                 } elseif ( in_array( 'etch-container-style', $styles, true ) ) {
@@ -164,7 +171,7 @@ class MaaXII_Etch_Callbacks {
                     if (is_string($child)) {
                         $innerBlocks[] = [
                             'blockName' => 'etch/text',
-                            'attrs' => [ 'content' => $child ],
+                            'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $child ],
                             'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => []
                         ];
                     } else {
@@ -173,36 +180,19 @@ class MaaXII_Etch_Callbacks {
                     }
                 }
 
-                $n = count($innerBlocks);
-                $innerContent = ($n === 0) ? ["\n\n"] : ["\n"];
-                if ($n > 0) {
-                    for ($i = 0; $i < $n; $i++) {
-                        $innerContent[] = null;
-                        if ($i < $n - 1) $innerContent[] = "\n\n";
-                    }
-                    $innerContent[] = "\n";
-                }
-
-                $innerHTML = "";
-                foreach ($innerContent as $part) if (is_string($part)) $innerHTML .= $part;
-
-                // FINAL STAND: Use pure arrays, serialize_blocks will handle the JSON conversion.
-                $final_attrs = [
-                    'tag'        => $tag,
-                    'attributes' => $attrs, // NO CASTING TO OBJECT HERE
-                    'styles'     => $styles
-                ];
-                
-                if (isset($item['name'])) {
-                    $final_attrs['metadata'] = [ 'name' => $item['name'] ];
-                }
-
+                // MATCHING BINAWP DNA: Empty innerHTML and innerContent for containers
+                // serialize_blocks will handle the wrapping <!-- wp:etch/element --> automatically
                 $blocks[] = [
                     'blockName'    => 'etch/element',
-                    'attrs'        => $final_attrs,
+                    'attrs'        => [
+                        'metadata'   => [ 'name' => $item['name'] ?? 'Element' ],
+                        'tag'        => $tag,
+                        'attributes' => $attrs,
+                        'styles'     => $styles
+                    ],
                     'innerBlocks'  => $innerBlocks,
-                    'innerHTML'    => $innerHTML,
-                    'innerContent' => $innerContent
+                    'innerHTML'    => '',
+                    'innerContent' => []
                 ];
             }
         }
