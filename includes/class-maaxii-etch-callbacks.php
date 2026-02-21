@@ -30,7 +30,6 @@ class MaaXII_Etch_Callbacks {
             'post_type'   => 'page'
         ]);
         
-        // Final sanity check: ensure no double slashes or missing data
         $content = serialize_blocks( $blocks );
         wp_update_post([ 
             'ID'           => $page_id, 
@@ -139,21 +138,18 @@ class MaaXII_Etch_Callbacks {
     private function process_blueprint_recursive( $layout ) {
         $blocks = [];
         foreach ( (array)$layout as $item ) {
-            // Case 1: Text Node
             if ( isset( $item['text'] ) ) {
                 $blocks[] = [ 
                     'blockName'    => 'etch/text', 
                     'attrs'        => [ 
-                        'metadata' => (object)[ 'name' => 'Text' ], 
+                        'metadata' => [ 'name' => 'Text' ], 
                         'content'  => (string)$item['text'] 
                     ], 
                     'innerBlocks'  => [], 
                     'innerHTML'    => '', 
                     'innerContent' => [] 
                 ];
-            } 
-            // Case 2: Element Node
-            else {
+            } else {
                 $tag        = $item['tag'] ?? 'div';
                 $name       = $item['name'] ?? 'Element';
                 $styles     = (array)($item['styles'] ?? []);
@@ -181,7 +177,7 @@ class MaaXII_Etch_Callbacks {
                     if (is_string($child)) {
                         $processed_children[] = [
                             'blockName' => 'etch/text',
-                            'attrs' => [ 'metadata' => (object)[ 'name' => 'Text' ], 'content' => $child ],
+                            'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $child ],
                             'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => []
                         ];
                     } else {
@@ -192,26 +188,31 @@ class MaaXII_Etch_Callbacks {
 
                 $n = count($processed_children);
                 
-                // ULTIMATE STABILITY: Zero-whitespace innerContent for better Gutenberg compatibility
+                // NEW FIX: Exact DNA match with BinaWP whitespace
                 $innerContent = [];
                 if ($n === 0) {
-                    $innerHTML = ''; // Empty elements have no innerHTML
+                    $innerContent = ["\n\n"];
                 } else {
-                    $innerContent[] = ''; // Start placeholder
+                    $innerContent[] = "\n"; 
                     for ($i = 0; $i < $n; $i++) {
-                        $innerContent[] = null; // Block placeholder
-                        if ($i < $n - 1) $innerContent[] = ''; // Spacer placeholder
+                        $innerContent[] = null;
+                        if ($i < $n - 1) $innerContent[] = "\n\n";
                     }
-                    $innerContent[] = ''; // End placeholder
-                    $innerHTML = ''; // No raw HTML needed when nulls are present
+                    $innerContent[] = "\n";
+                }
+
+                // innerHTML MUST be the concatenation of all string parts in innerContent
+                $innerHTML = "";
+                foreach ($innerContent as $part) {
+                    if (is_string($part)) $innerHTML .= $part;
                 }
 
                 $blocks[] = [ 
                     'blockName'    => 'etch/element', 
                     'attrs'        => [ 
-                        'metadata'   => (object)[ 'name' => $name ], 
+                        'metadata'   => [ 'name' => $name ], 
                         'tag'        => $tag, 
-                        'attributes' => (object)$html_attrs, 
+                        'attributes' => $html_attrs, 
                         'styles'     => $styles 
                     ], 
                     'innerBlocks'  => $processed_children, 
