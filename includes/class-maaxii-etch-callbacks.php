@@ -1,6 +1,6 @@
 <?php
 /**
- * Handles Ability Execution Callbacks (The proven logic)
+ * Handles Ability Execution Callbacks (Restored Original Logic)
  */
 class MaaXII_Etch_Callbacks {
 
@@ -175,19 +175,7 @@ class MaaXII_Etch_Callbacks {
                     $inner_c[] = "\n";
                 }
 
-                // THE MIRROR DNA FIX: Flatten HTML attributes directly into attrs
-                $final_attrs = array_merge(
-                    [ 'metadata' => [ 'name' => $name ], 'tag' => $tag, 'styles' => $styles ],
-                    $html_attrs
-                );
-
-                $blocks[] = [ 
-                    'blockName' => 'etch/element', 
-                    'attrs' => $final_attrs, 
-                    'innerBlocks' => $children, 
-                    'innerHTML' => "\n\n", 
-                    'innerContent' => $inner_c 
-                ];
+                $blocks[] = [ 'blockName' => 'etch/element', 'attrs' => [ 'metadata' => [ 'name' => $name ], 'tag' => $tag, 'attributes' => $html_attrs, 'styles' => $styles ], 'innerBlocks' => $children, 'innerHTML' => "\n\n", 'innerContent' => $inner_c ];
             }
         }
         return $blocks;
