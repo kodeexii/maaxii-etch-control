@@ -91,19 +91,10 @@ class MaaXII_Etch_Callbacks {
     }
 
     public function delete_pages( $params ) {
-        $query = new \WP_Query( [ 
-            'post_type'      => 'page', 
-            's'              => $params['search'], 
-            'posts_per_page' => -1 
-        ] );
-        
+        $query = new \WP_Query( [ 'post_type' => 'page', 's' => $params['search'], 'posts_per_page' => -1 ] );
         $count = 0;
         if ( $query->have_posts() ) {
-            while ( $query->have_posts() ) { 
-                $query->the_post(); 
-                wp_delete_post( get_the_ID(), false ); 
-                $count++; 
-            }
+            while ( $query->have_posts() ) { $query->the_post(); wp_delete_post( get_the_ID(), false ); $count++; }
         }
         wp_reset_postdata();
         return [ 'success' => true, 'deleted_count' => $count ];
@@ -178,7 +169,6 @@ class MaaXII_Etch_Callbacks {
                     $html_attrs['data-etch-element'] = 'container';
                 }
 
-                // IMPROVED: Robust children handling
                 $raw_children = isset( $item['children'] ) ? (array)$item['children'] : [];
                 $processed_children = [];
                 
@@ -202,16 +192,17 @@ class MaaXII_Etch_Callbacks {
                 }
 
                 $n = count($processed_children);
-                $inner_c  = ( $n === 0 ) ? ["\n\n"] : ["\n"];
                 
-                if ( $n > 0 ) {
-                    for ( $i = 0; $i < $n; $i++ ) {
-                        $inner_c[] = null;
-                        if ( $i < $n - 1 ) {
-                            $inner_c[] = "\n\n";
-                        }
+                // ULTIMATE FIX: Generate proper innerHTML and innerContent for Etch/Gutenberg
+                $innerHTML = "<$tag></$tag>";
+                $innerContent = ["<$tag>", null, "</$tag>"];
+
+                if ($n > 1) {
+                    $innerContent = ["<$tag>", null];
+                    for ($i = 1; $i < $n; $i++) {
+                        $innerContent[] = null;
                     }
-                    $inner_c[] = "\n";
+                    $innerContent[] = "</$tag>";
                 }
 
                 $blocks[] = [ 
@@ -223,8 +214,8 @@ class MaaXII_Etch_Callbacks {
                         'styles'     => $styles 
                     ], 
                     'innerBlocks'  => $processed_children, 
-                    'innerHTML'    => "\n\n", 
-                    'innerContent' => $inner_c 
+                    'innerHTML'    => $innerHTML, 
+                    'innerContent' => $innerContent 
                 ];
             }
         }
