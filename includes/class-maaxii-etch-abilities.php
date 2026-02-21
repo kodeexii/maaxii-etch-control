@@ -77,16 +77,23 @@ class MaaXII_Etch_Abilities {
             'meta'                => [ 'show_in_rest' => true, 'mcp' => [ 'public' => true, 'type' => 'tool' ] ],
         ] );
 
-        // Ability: Delete Pages
+        // Ability: Delete Pages (Updated with search_columns)
         wp_register_ability( 'maaxii/delete-pages', [
             'label'               => 'Delete Pages',
-            'description'         => 'Remotely delete pages using keyword search.',
+            'description'         => 'Remotely delete pages using keyword search with context control.',
             'category'            => 'maaxii',
             'execute_callback'    => [ $this->callbacks, 'delete_pages' ],
             'permission_callback' => [ $this->callbacks, 'check_admin_permission' ],
             'input_schema'        => [
                 'type' => 'object',
-                'properties' => [ 'search' => [ 'type' => 'string' ] ],
+                'properties' => [ 
+                    'search'         => [ 'type' => 'string' ],
+                    'search_columns' => [ 
+                        'type' => 'array', 
+                        'items' => [ 'type' => 'string', 'enum' => ['post_title', 'post_content', 'post_excerpt'] ],
+                        'description' => 'Target columns for search. Default: post_title'
+                    ] 
+                ],
                 'required' => [ 'search' ]
             ],
             'meta'                => [ 'show_in_rest' => true, 'mcp' => [ 'public' => true, 'type' => 'tool' ] ],

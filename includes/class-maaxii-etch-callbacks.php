@@ -91,11 +91,17 @@ class MaaXII_Etch_Callbacks {
     }
 
     public function delete_pages( $params ) {
-        $query = new \WP_Query( [ 
+        $search         = $params['search'] ?? '';
+        $search_columns = $params['search_columns'] ?? ['post_title']; // Default to title only for safety
+
+        $args = [ 
             'post_type'      => 'page', 
-            's'              => $params['search'] ?? '', 
+            's'              => $search,
+            'search_columns' => $search_columns,
             'posts_per_page' => -1 
-        ] );
+        ];
+
+        $query = new \WP_Query( $args );
         
         $count = 0;
         if ( $query->have_posts() ) {
@@ -106,7 +112,7 @@ class MaaXII_Etch_Callbacks {
             }
         }
         wp_reset_postdata();
-        return [ 'success' => true, 'deleted_count' => $count ];
+        return [ 'success' => true, 'deleted_count' => $count, 'search_context' => $search_columns ];
     }
 
     private function auto_register_styles( $layout, $additional_styles = [] ) {
