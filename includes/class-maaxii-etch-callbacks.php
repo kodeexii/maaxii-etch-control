@@ -141,17 +141,13 @@ class MaaXII_Etch_Callbacks {
             if ( isset( $item['text'] ) ) {
                 $blocks[] = [ 
                     'blockName'    => 'etch/text', 
-                    'attrs'        => [ 
-                        'metadata' => [ 'name' => 'Text' ], 
-                        'content'  => (string)$item['text'] 
-                    ], 
+                    'attrs'        => (object)[ 'content' => (string)$item['text'] ], 
                     'innerBlocks'  => [], 
                     'innerHTML'    => '', 
                     'innerContent' => [] 
                 ];
             } else {
                 $tag        = $item['tag'] ?? 'div';
-                $name       = $item['name'] ?? 'Element';
                 $styles     = (array)($item['styles'] ?? []);
                 $html_attrs = (array)($item['attrs'] ?? $item['attributes'] ?? []);
                 
@@ -172,12 +168,11 @@ class MaaXII_Etch_Callbacks {
 
                 $raw_children = isset( $item['children'] ) ? (array)$item['children'] : [];
                 $processed_children = [];
-                
                 foreach ($raw_children as $child) {
                     if (is_string($child)) {
                         $processed_children[] = [
                             'blockName' => 'etch/text',
-                            'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $child ],
+                            'attrs' => (object)[ 'content' => $child ],
                             'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => []
                         ];
                     } else {
@@ -188,33 +183,37 @@ class MaaXII_Etch_Callbacks {
 
                 $n = count($processed_children);
                 
-                // NEW FIX: Exact DNA match with BinaWP whitespace
+                // ULTIMATE DNA FIX: Match BinaWP's whitespace and serialization exactly
                 $innerContent = [];
                 if ($n === 0) {
                     $innerContent = ["\n\n"];
+                    $innerHTML = "\n\n";
                 } else {
-                    $innerContent[] = "\n"; 
+                    $innerContent[] = "\n";
                     for ($i = 0; $i < $n; $i++) {
                         $innerContent[] = null;
                         if ($i < $n - 1) $innerContent[] = "\n\n";
                     }
                     $innerContent[] = "\n";
+                    $innerHTML = "";
+                    foreach ($innerContent as $part) if (is_string($part)) $innerHTML .= $part;
                 }
 
-                // innerHTML MUST be the concatenation of all string parts in innerContent
-                $innerHTML = "";
-                foreach ($innerContent as $part) {
-                    if (is_string($part)) $innerHTML .= $part;
+                // Block Attributes
+                $block_attrs = [
+                    'tag'        => $tag,
+                    'attributes' => (object)$html_attrs,
+                    'styles'     => $styles
+                ];
+                
+                // Only add metadata if explicitly provided in blueprint
+                if (isset($item['name'])) {
+                    $block_attrs['metadata'] = (object)[ 'name' => $item['name'] ];
                 }
 
                 $blocks[] = [ 
                     'blockName'    => 'etch/element', 
-                    'attrs'        => [ 
-                        'metadata'   => [ 'name' => $name ], 
-                        'tag'        => $tag, 
-                        'attributes' => $html_attrs, 
-                        'styles'     => $styles 
-                    ], 
+                    'attrs'        => (object)$block_attrs, 
                     'innerBlocks'  => $processed_children, 
                     'innerHTML'    => $innerHTML, 
                     'innerContent' => $innerContent 
