@@ -193,10 +193,8 @@ class MaaXII_Etch_Callbacks {
 
                 $n = count($processed_children);
                 
-                // FINAL FIX: Emulate exact Gutenberg innerContent structure
-                $innerHTML = "<$tag></$tag>";
+                // ABSOLUTE FIX: innerContent & innerHTML must be perfectly synchronized
                 $innerContent = ($n === 0) ? ["\n\n"] : ["\n"];
-                
                 if ($n > 0) {
                     for ($i = 0; $i < $n; $i++) {
                         $innerContent[] = null;
@@ -205,12 +203,18 @@ class MaaXII_Etch_Callbacks {
                     $innerContent[] = "\n";
                 }
 
+                // innerHTML MUST be the sum of all string parts in innerContent
+                $innerHTML = '';
+                foreach ($innerContent as $part) {
+                    if (is_string($part)) $innerHTML .= $part;
+                }
+
                 $blocks[] = [ 
                     'blockName'    => 'etch/element', 
                     'attrs'        => [ 
                         'metadata'   => [ 'name' => $name ], 
                         'tag'        => $tag, 
-                        'attributes' => $html_attrs, 
+                        'attributes' => (object)$html_attrs, // Ensure it's a JSON object
                         'styles'     => $styles 
                     ], 
                     'innerBlocks'  => $processed_children, 
