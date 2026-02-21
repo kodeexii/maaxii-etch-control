@@ -1,6 +1,6 @@
 <?php
 /**
- * Handles Ability Execution Callbacks (Restored Original Logic)
+ * Handles Ability Execution Callbacks (The Hybrid Version)
  */
 class MaaXII_Etch_Callbacks {
 
@@ -17,6 +17,7 @@ class MaaXII_Etch_Callbacks {
         $layout = $params['layout'] ?? [];
         $styles = $params['styles'] ?? [];
 
+        // Build blocks using proven logic
         $blocks = $this->process_blueprint_recursive( $layout );
 
         if ( ! function_exists( 'serialize_blocks' ) ) {
@@ -30,14 +31,28 @@ class MaaXII_Etch_Callbacks {
             'post_type'   => 'page'
         ]);
         
+        // Save Etch Blocks DNA
         wp_update_post([ 
             'ID'           => $page_id, 
             'post_content' => wp_slash( serialize_blocks( $blocks ) ) 
         ], true);
         
+        // --- HYBRID INTEGRATION (Inspired by AWFAH) ---
+        // Update metadata using Internal REST Dispatcher for maximum stability
+        $meta_payload = [];
+        if ( isset($params['slug']) )           $meta_payload['slug'] = $params['slug'];
+        if ( isset($params['status']) )         $meta_payload['status'] = $params['status'];
+        if ( isset($params['excerpt']) )        $meta_payload['excerpt'] = $params['excerpt'];
+        if ( isset($params['featured_media']) ) $meta_payload['featured_media'] = (int)$params['featured_media'];
+
+        if ( ! empty($meta_payload) ) {
+            $this->dispatch_internal_rest( 'POST', '/wp/v2/pages/' . $page_id, $meta_payload );
+        }
+        // ----------------------------------------------
+
         $this->auto_register_styles( $layout, $styles );
 
-        return [ 'success' => true, 'url' => get_permalink( $page_id ) ];
+        return [ 'success' => true, 'url' => get_permalink( $page_id ), 'id' => $page_id ];
     }
 
     public function append_etch_section( $params ) {
@@ -92,7 +107,7 @@ class MaaXII_Etch_Callbacks {
 
     public function delete_pages( $params ) {
         $search         = $params['search'] ?? '';
-        $search_columns = $params['search_columns'] ?? ['post_title']; // Default to title only for safety
+        $search_columns = $params['search_columns'] ?? ['post_title'];
 
         $args = [ 
             'post_type'      => 'page', 
@@ -113,6 +128,17 @@ class MaaXII_Etch_Callbacks {
         }
         wp_reset_postdata();
         return [ 'success' => true, 'deleted_count' => $count, 'search_context' => $search_columns ];
+    }
+
+    /**
+     * Internal REST Dispatcher (The Smart Bridge)
+     */
+    private function dispatch_internal_rest( $method, $route, $params = [] ) {
+        $request = new \WP_REST_Request( $method, $route );
+        foreach ( $params as $key => $value ) {
+            $request->set_param( $key, $value );
+        }
+        return rest_do_request( $request );
     }
 
     private function auto_register_styles( $layout, $additional_styles = [] ) {
