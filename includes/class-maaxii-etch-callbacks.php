@@ -13,7 +13,7 @@ class MaaXII_Etch_Callbacks {
     }
 
     public function build_etch_page( $params ) {
-        $title  = $params['title'];
+        $title  = $params['title'] ?? '';
         $layout = $params['layout'] ?? [];
         $styles = $params['styles'] ?? [];
 
@@ -72,7 +72,7 @@ class MaaXII_Etch_Callbacks {
     }
 
     public function get_page_blocks( $params ) {
-        $page = get_page_by_title( $params['title'], OBJECT, 'page' );
+        $page = get_page_by_title( $params['title'] ?? '', OBJECT, 'page' );
         if ( ! $page ) {
             return new \WP_Error( 'not_found', 'Page not found.' );
         }
@@ -91,10 +91,19 @@ class MaaXII_Etch_Callbacks {
     }
 
     public function delete_pages( $params ) {
-        $query = new \WP_Query( [ 'post_type' => 'page', 's' => $params['search'], 'posts_per_page' => -1 ] );
+        $query = new \WP_Query( [ 
+            'post_type'      => 'page', 
+            's'              => $params['search'] ?? '', 
+            'posts_per_page' => -1 
+        ] );
+        
         $count = 0;
         if ( $query->have_posts() ) {
-            while ( $query->have_posts() ) { $query->the_post(); wp_delete_post( get_the_ID(), false ); $count++; }
+            while ( $query->have_posts() ) { 
+                $query->the_post(); 
+                wp_delete_post( get_the_ID(), false ); 
+                $count++; 
+            }
         }
         wp_reset_postdata();
         return [ 'success' => true, 'deleted_count' => $count ];
