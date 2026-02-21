@@ -193,16 +193,16 @@ class MaaXII_Etch_Callbacks {
 
                 $n = count($processed_children);
                 
-                // ULTIMATE FIX: Generate proper innerHTML and innerContent for Etch/Gutenberg
+                // FINAL FIX: Emulate exact Gutenberg innerContent structure
                 $innerHTML = "<$tag></$tag>";
-                $innerContent = ["<$tag>", null, "</$tag>"];
-
-                if ($n > 1) {
-                    $innerContent = ["<$tag>", null];
-                    for ($i = 1; $i < $n; $i++) {
+                $innerContent = ($n === 0) ? ["\n\n"] : ["\n"];
+                
+                if ($n > 0) {
+                    for ($i = 0; $i < $n; $i++) {
                         $innerContent[] = null;
+                        if ($i < $n - 1) $innerContent[] = "\n\n";
                     }
-                    $innerContent[] = "</$tag>";
+                    $innerContent[] = "\n";
                 }
 
                 $blocks[] = [ 
