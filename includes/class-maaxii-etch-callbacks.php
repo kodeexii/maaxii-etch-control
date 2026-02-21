@@ -166,24 +166,28 @@ class MaaXII_Etch_Callbacks {
 
                 $children = isset($item['children']) ? $this->process_blueprint_recursive($item['children']) : [];
                 $n = count($children);
-                $inner_c = ($n === 0) ? ["
-
-"] : ["
-"];
+                $inner_c = ($n === 0) ? ["\n\n"] : ["\n"];
                 if ($n > 0) {
                     for ($i = 0; $i < $n; $i++) {
                         $inner_c[] = null;
-                        if ($i < $n - 1) $inner_c[] = "
-
-";
+                        if ($i < $n - 1) $inner_c[] = "\n\n";
                     }
-                    $inner_c[] = "
-";
+                    $inner_c[] = "\n";
                 }
 
-                $blocks[] = [ 'blockName' => 'etch/element', 'attrs' => [ 'metadata' => [ 'name' => $name ], 'tag' => $tag, 'attributes' => $html_attrs, 'styles' => $styles ], 'innerBlocks' => $children, 'innerHTML' => "
+                // THE MIRROR DNA FIX: Flatten HTML attributes directly into attrs
+                $final_attrs = array_merge(
+                    [ 'metadata' => [ 'name' => $name ], 'tag' => $tag, 'styles' => $styles ],
+                    $html_attrs
+                );
 
-", 'innerContent' => $inner_c ];
+                $blocks[] = [ 
+                    'blockName' => 'etch/element', 
+                    'attrs' => $final_attrs, 
+                    'innerBlocks' => $children, 
+                    'innerHTML' => "\n\n", 
+                    'innerContent' => $inner_c 
+                ];
             }
         }
         return $blocks;
