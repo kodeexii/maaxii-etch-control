@@ -30,10 +30,9 @@ class MaaXII_Etch_Callbacks {
             'post_type'   => 'page'
         ]);
         
-        $content = serialize_blocks( $blocks );
         wp_update_post([ 
             'ID'           => $page_id, 
-            'post_content' => wp_slash( $content ) 
+            'post_content' => wp_slash( serialize_blocks( $blocks ) ) 
         ], true);
         
         $this->auto_register_styles( $layout, $styles );
@@ -139,78 +138,35 @@ class MaaXII_Etch_Callbacks {
     private function process_blueprint_recursive( $layout ) {
         $blocks = [];
         foreach ( (array)$layout as $item ) {
-            if ( isset( $item['text'] ) ) {
-                $blocks[] = [
-                    'blockName'    => 'etch/text',
-                    'attrs'        => [ 
-                        'metadata' => [ 'name' => 'Text' ],
-                        'content'  => (string)$item['text'] 
-                    ],
-                    'innerBlocks'  => [],
-                    'innerHTML'    => '',
-                    'innerContent' => []
-                ];
+            if ( isset($item['text']) ) {
+                $blocks[] = [ 'blockName' => 'etch/text', 'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $item['text'] ], 'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => [] ];
             } else {
-                $tag    = $item['tag'] ?? 'div';
+                $tag = $item['tag'] ?? 'div';
+                $name = $item['name'] ?? 'Element';
                 $styles = (array)($item['styles'] ?? []);
-                $attrs  = (array)($item['attrs'] ?? $item['attributes'] ?? []);
+                $html_attrs = (array)($item['attrs'] ?? $item['attributes'] ?? []);
                 
-                if ( in_array( 'etch-section-style', $styles, true ) ) {
-                    $attrs['data-etch-element'] = 'section';
-                } elseif ( in_array( 'etch-container-style', $styles, true ) ) {
-                    $attrs['data-etch-element'] = 'container';
+                if (isset($html_attrs['class'])) {
+                    $cls_array = explode(' ', $html_attrs['class']);
+                    foreach ($cls_array as $c) if (!in_array($c, $styles)) $styles[] = $c;
                 }
 
-                $raw_children = isset( $item['children'] ) ? (array)$item['children'] : [];
-                $innerBlocks = [];
-                foreach ($raw_children as $child) {
-                    if (is_string($child)) {
-                        $innerBlocks[] = [
-                            'blockName' => 'etch/text',
-                            'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $child ],
-                            'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => []
-                        ];
-                    } else {
-                        $nested = $this->process_blueprint_recursive([$child]);
-                        if (!empty($nested)) $innerBlocks[] = $nested[0];
-                    }
-                }
+                if ( in_array( 'etch-section-style', $styles, true ) ) $html_attrs['data-etch-element'] = 'section';
+                elseif ( in_array( 'etch-container-style', $styles, true ) ) $html_attrs['data-etch-element'] = 'container';
+                elseif ( in_array( 'etch-flex-div-style', $styles, true ) ) $html_attrs['data-etch-element'] = 'flex-div';
 
-                // THE CRITICAL FIX: Re-implementing correctly formatted innerContent for Gutenberg serialization
-                $n = count($innerBlocks);
-                $innerContent = [];
-                if ($n === 0) {
-                    $innerContent = ["\n\n"];
-                } else {
-                    $innerContent[] = "\n";
+                $children = isset($item['children']) ? $this->process_blueprint_recursive($item['children']) : [];
+                $n = count($children);
+                $inner_c = ($n === 0) ? ["\n\n"] : ["\n"];
+                if ($n > 0) {
                     for ($i = 0; $i < $n; $i++) {
-                        $innerContent[] = null; // Important: Placeholder for inner block content
-                        if ($i < $n - 1) {
-                            $innerContent[] = "\n\n";
-                        }
+                        $inner_c[] = null;
+                        if ($i < $n - 1) $inner_c[] = "\n\n";
                     }
-                    $innerContent[] = "\n";
+                    $inner_c[] = "\n";
                 }
 
-                $innerHTML = "";
-                foreach ($innerContent as $part) {
-                    if (is_string($part)) {
-                        $innerHTML .= $part;
-                    }
-                }
-
-                $blocks[] = [
-                    'blockName'    => 'etch/element',
-                    'attrs'        => [
-                        'metadata'   => [ 'name' => $item['name'] ?? 'Element' ],
-                        'tag'        => $tag,
-                        'attributes' => $attrs,
-                        'styles'     => $styles
-                    ],
-                    'innerBlocks'  => $innerBlocks,
-                    'innerHTML'    => $innerHTML,
-                    'innerContent' => $innerContent
-                ];
+                $blocks[] = [ 'blockName' => 'etch/element', 'attrs' => [ 'metadata' => [ 'name' => $name ], 'tag' => $tag, 'attributes' => $html_attrs, 'styles' => $styles ], 'innerBlocks' => $children, 'innerHTML' => "\n\n", 'innerContent' => $inner_c ];
             }
         }
         return $blocks;
