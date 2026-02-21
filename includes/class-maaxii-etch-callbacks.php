@@ -152,7 +152,6 @@ class MaaXII_Etch_Callbacks {
                 $styles = (array)($item['styles'] ?? []);
                 $attrs  = (array)($item['attrs'] ?? $item['attributes'] ?? []);
                 
-                // Mirroring BinaWP: Explicitly handling Etch layout styles
                 if ( in_array( 'etch-section-style', $styles, true ) ) {
                     $attrs['data-etch-element'] = 'section';
                 } elseif ( in_array( 'etch-container-style', $styles, true ) ) {
@@ -187,13 +186,16 @@ class MaaXII_Etch_Callbacks {
                 $innerHTML = "";
                 foreach ($innerContent as $part) if (is_string($part)) $innerHTML .= $part;
 
-                // MIRROR DNA FIX: Ensure metadata and styles are ALWAYS present
+                // FINAL STAND: Use pure arrays, serialize_blocks will handle the JSON conversion.
                 $final_attrs = [
-                    'metadata'   => (object)[ 'name' => $item['name'] ?? 'Element' ],
                     'tag'        => $tag,
-                    'attributes' => (object)$attrs,
-                    'styles'     => $styles // BinaWP always has an array here
+                    'attributes' => $attrs, // NO CASTING TO OBJECT HERE
+                    'styles'     => $styles
                 ];
+                
+                if (isset($item['name'])) {
+                    $final_attrs['metadata'] = [ 'name' => $item['name'] ];
+                }
 
                 $blocks[] = [
                     'blockName'    => 'etch/element',

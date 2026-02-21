@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MaaXII Etch Control
  * Description: Universal remote management and programmatic page builder for Etch (OOP Version).
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: MaaXII Solutions and Services
  * Text Domain: maaxii-etch-control
  */
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define constants
-define( 'MAAXII_ETCH_CONTROL_VERSION', '1.1.0' );
+define( 'MAAXII_ETCH_CONTROL_VERSION', '1.1.1' );
 define( 'MAAXII_ETCH_CONTROL_PATH', plugin_dir_path( __FILE__ ) );
 
 // Autoload classes
