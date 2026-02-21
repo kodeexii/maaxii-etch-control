@@ -107,7 +107,8 @@ class MaaXII_Etch_Callbacks {
 
         $extract_classes = function( $items ) use ( &$extract_classes, &$new_styles, $existing ) {
             foreach ( (array)$items as $item ) {
-                $classes = $item['attrs']['class'] ?? $item['attributes']['class'] ?? '';
+                $attrs = $item['attrs'] ?? $item['attributes'] ?? [];
+                $classes = $attrs['class'] ?? '';
                 if ( $classes ) {
                     $class_list = explode( ' ', $classes );
                     foreach ( $class_list as $cls ) {
@@ -138,85 +139,75 @@ class MaaXII_Etch_Callbacks {
     private function process_blueprint_recursive( $layout ) {
         $blocks = [];
         foreach ( (array)$layout as $item ) {
+            // CASE 1: TEXT
             if ( isset( $item['text'] ) ) {
-                $blocks[] = [ 
-                    'blockName'    => 'etch/text', 
-                    'attrs'        => (object)[ 'content' => (string)$item['text'] ], 
-                    'innerBlocks'  => [], 
-                    'innerHTML'    => '', 
-                    'innerContent' => [] 
+                $blocks[] = [
+                    'blockName'    => 'etch/text',
+                    'attrs'        => [ 'content' => (string)$item['text'] ],
+                    'innerBlocks'  => [],
+                    'innerHTML'    => '',
+                    'innerContent' => []
                 ];
-            } else {
-                $tag        = $item['tag'] ?? 'div';
-                $styles     = (array)($item['styles'] ?? []);
-                $html_attrs = (array)($item['attrs'] ?? $item['attributes'] ?? []);
+            } 
+            // CASE 2: ELEMENT
+            else {
+                $tag    = $item['tag'] ?? 'div';
+                $styles = (array)($item['styles'] ?? []);
+                $attrs  = (array)($item['attrs'] ?? $item['attributes'] ?? []);
                 
-                if ( isset( $html_attrs['class'] ) ) {
-                    $cls_array = explode( ' ', $html_attrs['class'] );
-                    foreach ( $cls_array as $c ) {
-                        if ( ! in_array( $c, $styles ) ) {
-                            $styles[] = $c;
-                        }
-                    }
-                }
-
+                // Auto-detect Etch elements
                 if ( in_array( 'etch-section-style', $styles, true ) ) {
-                    $html_attrs['data-etch-element'] = 'section';
+                    $attrs['data-etch-element'] = 'section';
                 } elseif ( in_array( 'etch-container-style', $styles, true ) ) {
-                    $html_attrs['data-etch-element'] = 'container';
+                    $attrs['data-etch-element'] = 'container';
                 }
 
+                // Process Children
                 $raw_children = isset( $item['children'] ) ? (array)$item['children'] : [];
-                $processed_children = [];
+                $innerBlocks = [];
                 foreach ($raw_children as $child) {
                     if (is_string($child)) {
-                        $processed_children[] = [
+                        $innerBlocks[] = [
                             'blockName' => 'etch/text',
-                            'attrs' => (object)[ 'content' => $child ],
+                            'attrs' => [ 'content' => $child ],
                             'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => []
                         ];
                     } else {
                         $nested = $this->process_blueprint_recursive([$child]);
-                        if (!empty($nested)) $processed_children[] = $nested[0];
+                        if (!empty($nested)) $innerBlocks[] = $nested[0];
                     }
                 }
 
-                $n = count($processed_children);
-                
-                // ULTIMATE DNA FIX: Match BinaWP's whitespace and serialization exactly
-                $innerContent = [];
-                if ($n === 0) {
-                    $innerContent = ["\n\n"];
-                    $innerHTML = "\n\n";
-                } else {
-                    $innerContent[] = "\n";
+                $n = count($innerBlocks);
+                $innerContent = ($n === 0) ? ["\n\n"] : ["\n"];
+                if ($n > 0) {
                     for ($i = 0; $i < $n; $i++) {
                         $innerContent[] = null;
                         if ($i < $n - 1) $innerContent[] = "\n\n";
                     }
                     $innerContent[] = "\n";
-                    $innerHTML = "";
-                    foreach ($innerContent as $part) if (is_string($part)) $innerHTML .= $part;
                 }
 
-                // Block Attributes
-                $block_attrs = [
+                $innerHTML = "";
+                foreach ($innerContent as $part) if (is_string($part)) $innerHTML .= $part;
+
+                // BLOCK ATTRIBUTES (THE KEY FIX)
+                $final_attrs = [
                     'tag'        => $tag,
-                    'attributes' => (object)$html_attrs,
+                    'attributes' => (object)$attrs,
                     'styles'     => $styles
                 ];
                 
-                // Only add metadata if explicitly provided in blueprint
                 if (isset($item['name'])) {
-                    $block_attrs['metadata'] = (object)[ 'name' => $item['name'] ];
+                    $final_attrs['metadata'] = (object)[ 'name' => $item['name'] ];
                 }
 
-                $blocks[] = [ 
-                    'blockName'    => 'etch/element', 
-                    'attrs'        => (object)$block_attrs, 
-                    'innerBlocks'  => $processed_children, 
-                    'innerHTML'    => $innerHTML, 
-                    'innerContent' => $innerContent 
+                $blocks[] = [
+                    'blockName'    => 'etch/element',
+                    'attrs'        => $final_attrs,
+                    'innerBlocks'  => $innerBlocks,
+                    'innerHTML'    => $innerHTML,
+                    'innerContent' => $innerContent
                 ];
             }
         }
