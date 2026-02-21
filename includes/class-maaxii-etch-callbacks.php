@@ -178,24 +178,40 @@ class MaaXII_Etch_Callbacks {
                     $html_attrs['data-etch-element'] = 'container';
                 }
 
-                $children = isset( $item['children'] ) ? $this->process_blueprint_recursive( $item['children'] ) : [];
-                $n        = count( $children );
-                $inner_c  = ( $n === 0 ) ? ["
+                // IMPROVED: Robust children handling
+                $raw_children = isset( $item['children'] ) ? (array)$item['children'] : [];
+                $processed_children = [];
+                
+                foreach ($raw_children as $child) {
+                    if (is_string($child)) {
+                        $processed_children[] = [
+                            'blockName' => 'etch/text',
+                            'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $child ],
+                            'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => []
+                        ];
+                    } elseif (isset($child['text'])) {
+                        $processed_children[] = [
+                            'blockName' => 'etch/text',
+                            'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $child['text'] ],
+                            'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => []
+                        ];
+                    } else {
+                        $nested = $this->process_blueprint_recursive([$child]);
+                        if (!empty($nested)) $processed_children[] = $nested[0];
+                    }
+                }
 
-"] : ["
-"];
+                $n = count($processed_children);
+                $inner_c  = ( $n === 0 ) ? ["\n\n"] : ["\n"];
                 
                 if ( $n > 0 ) {
                     for ( $i = 0; $i < $n; $i++ ) {
                         $inner_c[] = null;
                         if ( $i < $n - 1 ) {
-                            $inner_c[] = "
-
-";
+                            $inner_c[] = "\n\n";
                         }
                     }
-                    $inner_c[] = "
-";
+                    $inner_c[] = "\n";
                 }
 
                 $blocks[] = [ 
@@ -206,10 +222,8 @@ class MaaXII_Etch_Callbacks {
                         'attributes' => $html_attrs, 
                         'styles'     => $styles 
                     ], 
-                    'innerBlocks'  => $children, 
-                    'innerHTML'    => "
-
-", 
+                    'innerBlocks'  => $processed_children, 
+                    'innerHTML'    => "\n\n", 
                     'innerContent' => $inner_c 
                 ];
             }
