@@ -139,7 +139,6 @@ class MaaXII_Etch_Callbacks {
     private function process_blueprint_recursive( $layout ) {
         $blocks = [];
         foreach ( (array)$layout as $item ) {
-            // CASE 1: TEXT
             if ( isset( $item['text'] ) ) {
                 $blocks[] = [
                     'blockName'    => 'etch/text',
@@ -151,14 +150,11 @@ class MaaXII_Etch_Callbacks {
                     'innerHTML'    => '',
                     'innerContent' => []
                 ];
-            } 
-            // CASE 2: ELEMENT
-            else {
+            } else {
                 $tag    = $item['tag'] ?? 'div';
                 $styles = (array)($item['styles'] ?? []);
                 $attrs  = (array)($item['attrs'] ?? $item['attributes'] ?? []);
                 
-                // Detection for Etch elements
                 if ( in_array( 'etch-section-style', $styles, true ) ) {
                     $attrs['data-etch-element'] = 'section';
                 } elseif ( in_array( 'etch-container-style', $styles, true ) ) {
@@ -180,8 +176,29 @@ class MaaXII_Etch_Callbacks {
                     }
                 }
 
-                // MATCHING BINAWP DNA: Empty innerHTML and innerContent for containers
-                // serialize_blocks will handle the wrapping <!-- wp:etch/element --> automatically
+                // THE CRITICAL FIX: Re-implementing correctly formatted innerContent for Gutenberg serialization
+                $n = count($innerBlocks);
+                $innerContent = [];
+                if ($n === 0) {
+                    $innerContent = ["\n\n"];
+                } else {
+                    $innerContent[] = "\n";
+                    for ($i = 0; $i < $n; $i++) {
+                        $innerContent[] = null; // Important: Placeholder for inner block content
+                        if ($i < $n - 1) {
+                            $innerContent[] = "\n\n";
+                        }
+                    }
+                    $innerContent[] = "\n";
+                }
+
+                $innerHTML = "";
+                foreach ($innerContent as $part) {
+                    if (is_string($part)) {
+                        $innerHTML .= $part;
+                    }
+                }
+
                 $blocks[] = [
                     'blockName'    => 'etch/element',
                     'attrs'        => [
@@ -191,8 +208,8 @@ class MaaXII_Etch_Callbacks {
                         'styles'     => $styles
                     ],
                     'innerBlocks'  => $innerBlocks,
-                    'innerHTML'    => '',
-                    'innerContent' => []
+                    'innerHTML'    => $innerHTML,
+                    'innerContent' => $innerContent
                 ];
             }
         }
