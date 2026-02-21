@@ -30,9 +30,10 @@ class MaaXII_Etch_Callbacks {
             'post_type'   => 'page'
         ]);
         
+        $content = serialize_blocks( $blocks );
         wp_update_post([ 
             'ID'           => $page_id, 
-            'post_content' => wp_slash( serialize_blocks( $blocks ) ) 
+            'post_content' => wp_slash( $content ) 
         ], true);
         
         $this->auto_register_styles( $layout, $styles );
@@ -147,9 +148,20 @@ class MaaXII_Etch_Callbacks {
     private function process_blueprint_recursive( $layout ) {
         $blocks = [];
         foreach ( (array)$layout as $item ) {
+            // Case 1: Pure Text
             if ( isset($item['text']) ) {
-                $blocks[] = [ 'blockName' => 'etch/text', 'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $item['text'] ], 'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => [] ];
+                $blocks[] = [ 
+                    'blockName' => 'etch/text', 
+                    'attrs' => [ 
+                        'metadata' => [ 'name' => 'Text' ], 
+                        'content' => (string)$item['text'] 
+                    ], 
+                    'innerBlocks' => [], 
+                    'innerHTML' => '', 
+                    'innerContent' => [] 
+                ];
             } else {
+                // Case 2: Element
                 $tag = $item['tag'] ?? 'div';
                 $name = $item['name'] ?? 'Element';
                 $styles = (array)($item['styles'] ?? []);
@@ -160,12 +172,24 @@ class MaaXII_Etch_Callbacks {
                     foreach ($cls_array as $c) if (!in_array($c, $styles)) $styles[] = $c;
                 }
 
+                // Layout Style detection
                 if ( in_array( 'etch-section-style', $styles, true ) ) $html_attrs['data-etch-element'] = 'section';
                 elseif ( in_array( 'etch-container-style', $styles, true ) ) $html_attrs['data-etch-element'] = 'container';
                 elseif ( in_array( 'etch-flex-div-style', $styles, true ) ) $html_attrs['data-etch-element'] = 'flex-div';
 
-                $children = isset($item['children']) ? $this->process_blueprint_recursive($item['children']) : [];
-                $n = count($children);
+                // Process children with strictly original logic
+                $children_raw = isset($item['children']) ? (array)$item['children'] : [];
+                $children_blocks = [];
+                foreach ($children_raw as $child) {
+                    if (is_string($child)) {
+                        $children_blocks[] = [ 'blockName' => 'etch/text', 'attrs' => [ 'metadata' => [ 'name' => 'Text' ], 'content' => $child ], 'innerBlocks' => [], 'innerHTML' => '', 'innerContent' => [] ];
+                    } else {
+                        $processed = $this->process_blueprint_recursive([$child]);
+                        if (!empty($processed)) $children_blocks[] = $processed[0];
+                    }
+                }
+
+                $n = count($children_blocks);
                 $inner_c = ($n === 0) ? ["\n\n"] : ["\n"];
                 if ($n > 0) {
                     for ($i = 0; $i < $n; $i++) {
@@ -175,7 +199,18 @@ class MaaXII_Etch_Callbacks {
                     $inner_c[] = "\n";
                 }
 
-                $blocks[] = [ 'blockName' => 'etch/element', 'attrs' => [ 'metadata' => [ 'name' => $name ], 'tag' => $tag, 'attributes' => $html_attrs, 'styles' => $styles ], 'innerBlocks' => $children, 'innerHTML' => "\n\n", 'innerContent' => $inner_c ];
+                $blocks[] = [ 
+                    'blockName' => 'etch/element', 
+                    'attrs' => [ 
+                        'metadata' => [ 'name' => $name ], 
+                        'tag' => $tag, 
+                        'attributes' => $html_attrs, 
+                        'styles' => $styles 
+                    ], 
+                    'innerBlocks' => $children_blocks, 
+                    'innerHTML' => "\n\n", 
+                    'innerContent' => $inner_c 
+                ];
             }
         }
         return $blocks;
