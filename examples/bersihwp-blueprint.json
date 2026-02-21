@@ -1,0 +1,45 @@
+{
+  "input": {
+    "title": "Servis BersihWP",
+    "layout": [
+      {
+        "tag": "section",
+        "name": "Hero Section",
+        "styles": ["etch-section-style"],
+        "attrs": { "class": "bersihwp-hero" },
+        "children": [
+          {
+            "tag": "div",
+            "name": "Wrapper",
+            "styles": ["etch-container-style"],
+            "attrs": { "class": "bersihwp-hero__wrapper" },
+            "children": [
+              {
+                "tag": "h1",
+                "name": "Heading",
+                "attrs": { "class": "bersihwp-hero__heading" },
+                "children": [
+                  { "text": "JANGAN BIARKAN WEBSITE ANDA MENJADI " },
+                  { "tag": "span", "attrs": { "class": "u-text--action" }, "children": [{ "text": "'SAMPAH DIGITAL'" }] },
+                  { "text": " YANG LEMBAB DAN BERISIKO." }
+                ]
+              },
+              {
+                "tag": "p",
+                "name": "Lede",
+                "attrs": { "class": "bersihwp-hero__lede" },
+                "children": [{ "text": "Website yang tidak diselenggara adalah bom jangka yang menanti masa untuk meledak." }]
+              },
+              {
+                "tag": "a",
+                "name": "CTA",
+                "attrs": { "class": "bersihwp-hero__cta btn--primary", "href": "#audit" },
+                "children": [{ "text": "Audit BersihWP Percuma Sekarang" }]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

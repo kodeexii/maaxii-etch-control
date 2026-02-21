@@ -1,0 +1,29 @@
+{
+  "input": {
+    "title": "Servis BinaWP",
+    "layout": [
+      {
+        "tag": "section",
+        "name": "Hero Section",
+        "styles": ["etch-section-style"],
+        "attrs": { "class": "binawp-hero" },
+        "children": [
+          {
+            "tag": "div",
+            "name": "Wrapper",
+            "styles": ["etch-container-style"],
+            "attrs": { "class": "binawp-hero__wrapper" },
+            "children": [
+              {
+                "tag": "h1",
+                "name": "Heading",
+                "attrs": { "class": "binawp-hero__heading" },
+                "children": [{ "text": "BERHENTI MEMBAKAR DUIT IKLAN PADA WEBSITE YANG TIDAK BERFUNGSI." }]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

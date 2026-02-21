@@ -1,0 +1,131 @@
+{
+  "input": {
+    "title": "MaaXII Etch Control Dashboard",
+    "layout": [
+      {
+        "tag": "section",
+        "name": "Header Section",
+        "styles": ["etch-section-style"],
+        "attrs": { "class": "maaxii-dashboard-header", "style": "background-color: var(--base-dark); color: var(--white); padding: var(--space-l); text-align: center;" },
+        "children": [
+          {
+            "tag": "div",
+            "name": "Container",
+            "styles": ["etch-container-style"],
+            "attrs": { "class": "maaxii-dashboard-header__wrapper" },
+            "children": [
+              {
+                "tag": "h1",
+                "name": "Title",
+                "attrs": { "class": "maaxii-dashboard-header__title", "style": "font-size: var(--text-h1); margin-bottom: var(--space-s);" },
+                "children": [{ "text": "MaaXII Etch Control Dashboard" }]
+              },
+              {
+                "tag": "p",
+                "name": "Subtitle",
+                "attrs": { "class": "maaxii-dashboard-header__subtitle", "style": "font-size: var(--text-l); opacity: 0.8;" },
+                "children": [{ "text": "Universal remote management and programmatic page builder for Etch." }]
+              },
+              {
+                "tag": "div",
+                "name": "Status Badge",
+                "attrs": { "class": "maaxii-status-badge", "style": "display: inline-block; padding: var(--space-xs) var(--space-m); background-color: var(--action); border-radius: var(--radius-s); margin-top: var(--space-m); font-weight: bold;" },
+                "children": [{ "text": "System Active: v1.0.0" }]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "section",
+        "name": "Instructions Section",
+        "styles": ["etch-section-style"],
+        "attrs": { "class": "maaxii-dashboard-instructions", "style": "padding: var(--space-xl) 0;" },
+        "children": [
+          {
+            "tag": "div",
+            "name": "Container",
+            "styles": ["etch-container-style"],
+            "attrs": { "class": "maaxii-dashboard-instructions__wrapper" },
+            "children": [
+              {
+                "tag": "h2",
+                "name": "Section Title",
+                "attrs": { "class": "maaxii-dashboard-instructions__title", "style": "font-size: var(--text-h2); margin-bottom: var(--space-m); color: var(--primary);" },
+                "children": [{ "text": "How to Use This Plugin" }]
+              },
+              {
+                "tag": "div",
+                "name": "Grid",
+                "attrs": { "class": "maaxii-dashboard-grid", "style": "display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-l);" },
+                "children": [
+                  {
+                    "tag": "div",
+                    "name": "Card 1",
+                    "attrs": { "class": "maaxii-card", "style": "padding: var(--space-m); border: 1px solid var(--shade-light); border-radius: var(--radius-m); background: var(--white);" },
+                    "children": [
+                      { "tag": "h3", "attrs": { "style": "color: var(--action); margin-bottom: var(--space-xs);" }, "children": [{ "text": "1. Prepare JSON" }] },
+                      { "tag": "p", "children": [{ "text": "Create a Blueprint JSON file following the standard schema (Section > Container > Elements)." }] }
+                    ]
+                  },
+                  {
+                    "tag": "div",
+                    "name": "Card 2",
+                    "attrs": { "class": "maaxii-card", "style": "padding: var(--space-m); border: 1px solid var(--shade-light); border-radius: var(--radius-m); background: var(--white);" },
+                    "children": [
+                      { "tag": "h3", "attrs": { "style": "color: var(--action); margin-bottom: var(--space-xs);" }, "children": [{ "text": "2. Call API" }] },
+                      { "tag": "p", "children": [{ "text": "Use the 'maaxii/build-etch-page' ability via MCP or REST API to send the blueprint." }] }
+                    ]
+                  },
+                  {
+                    "tag": "div",
+                    "name": "Card 3",
+                    "attrs": { "class": "maaxii-card", "style": "padding: var(--space-m); border: 1px solid var(--shade-light); border-radius: var(--radius-m); background: var(--white);" },
+                    "children": [
+                      { "tag": "h3", "attrs": { "style": "color: var(--action); margin-bottom: var(--space-xs);" }, "children": [{ "text": "3. Auto-Build" }] },
+                      { "tag": "p", "children": [{ "text": "Watch as the plugin automatically constructs the page and registers necessary styles." }] }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "section",
+        "name": "Abilities List Section",
+        "styles": ["etch-section-style"],
+        "attrs": { "class": "maaxii-dashboard-abilities", "style": "background-color: var(--base-ultra-light); padding: var(--space-xl) 0;" },
+        "children": [
+          {
+            "tag": "div",
+            "name": "Container",
+            "styles": ["etch-container-style"],
+            "attrs": { "class": "maaxii-dashboard-abilities__wrapper" },
+            "children": [
+              {
+                "tag": "h2",
+                "name": "Title",
+                "attrs": { "class": "maaxii-dashboard-abilities__title", "style": "font-size: var(--text-h2); margin-bottom: var(--space-m);" },
+                "children": [{ "text": "Registered Abilities" }]
+              },
+              {
+                "tag": "ul",
+                "name": "List",
+                "attrs": { "class": "maaxii-ability-list", "style": "list-style: none; padding: 0;" },
+                "children": [
+                  { "tag": "li", "attrs": { "style": "padding: var(--space-s); border-bottom: 1px solid var(--shade-light);" }, "children": [{ "text": "🔹 maaxii/build-etch-page" }] },
+                  { "tag": "li", "attrs": { "style": "padding: var(--space-s); border-bottom: 1px solid var(--shade-light);" }, "children": [{ "text": "🔹 maaxii/append-etch-section" }] },
+                  { "tag": "li", "attrs": { "style": "padding: var(--space-s); border-bottom: 1px solid var(--shade-light);" }, "children": [{ "text": "🔹 maaxii/get-page-blocks" }] },
+                  { "tag": "li", "attrs": { "style": "padding: var(--space-s); border-bottom: 1px solid var(--shade-light);" }, "children": [{ "text": "🔹 maaxii/delete-pages" }] },
+                  { "tag": "li", "attrs": { "style": "padding: var(--space-s);" }, "children": [{ "text": "🔹 maaxii/ping" }] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
